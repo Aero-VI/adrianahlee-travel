@@ -65,5 +65,100 @@
         "Source": "manual"
       }
     ]
+  },
+  {
+    "TripId": "f1-emilia-romagna-2025",
+    "TripName": "F1 Emilia Romagna Grand Prix — Imola, Italy",
+    "IsActiveTravel": true,
+    "Segments": [
+      {
+        "SegmentType": "Train",
+        "BookingNumber": null,
+        "Operator": "Trenitalia (Regionale)",
+        "TrainNumber": null,
+        "SeatClass": null,
+        "Source": "manual",
+        "Departure": {
+          "LocationName": "Bologna Centrale",
+          "City": "Bologna",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-16T08:00:00+02:00"
+        },
+        "Arrival": {
+          "LocationName": "Imola Station",
+          "City": "Imola",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-16T08:30:00+02:00"
+        }
+      },
+      {
+        "SegmentType": "Train",
+        "BookingNumber": null,
+        "Operator": "Trenitalia (Regionale)",
+        "TrainNumber": null,
+        "SeatClass": null,
+        "Source": "manual",
+        "Departure": {
+          "LocationName": "Bologna Centrale",
+          "City": "Bologna",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-16T12:00:00+02:00"
+        },
+        "Arrival": {
+          "LocationName": "Forli Station",
+          "City": "Forli",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-16T13:10:00+02:00"
+        }
+      },
+      {
+        "SegmentType": "Train",
+        "BookingNumber": null,
+        "Operator": "Trenitalia (Regionale)",
+        "TrainNumber": null,
+        "SeatClass": null,
+        "Source": "manual",
+        "Departure": {
+          "LocationName": "Imola Station",
+          "City": "Imola",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-18T19:00:00+02:00"
+        },
+        "Arrival": {
+          "LocationName": "Bologna Centrale",
+          "City": "Bologna",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-18T19:30:00+02:00"
+        }
+      },
+      {
+        "SegmentType": "Train",
+        "BookingNumber": null,
+        "Operator": "Trenitalia (Regionale)",
+        "TrainNumber": null,
+        "SeatClass": null,
+        "Source": "manual",
+        "Departure": {
+          "LocationName": "Forli Station",
+          "City": "Forli",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-19T11:00:00+02:00"
+        },
+        "Arrival": {
+          "LocationName": "Bologna Centrale",
+          "City": "Bologna",
+          "Province": "Emilia-Romagna",
+          "CountryCode": "IT",
+          "Time": "2025-05-19T12:10:00+02:00"
+        }
+      }
+    ]
   }
 ]
