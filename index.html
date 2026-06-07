@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Adrianah's Travel Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body id="app-body">
+    <header id="main-header">
+        <div class="header-left">
+            <span class="logo-icon">&#x2B22;</span>
+            <h1>ADRIANAH<span class="accent">TRAVEL</span></h1>
+        </div>
+        <nav>
+            <button class="nav-btn active" data-view="globe">
+                <span class="nav-icon">&#x1F310;</span> Globe
+            </button>
+            <button class="nav-btn" data-view="table">
+                <span class="nav-icon">&#x1F4CB;</span> Table
+            </button>
+            <button class="nav-btn" data-view="timeline">
+                <span class="nav-icon">&#x23F3;</span> Timeline
+            </button>
+            <button class="nav-btn" data-view="countries">
+                <span class="nav-icon">&#x1F3F3;&#xFE0F;</span> Countries
+            </button>
+            <button class="nav-btn" data-view="summary">
+                <span class="nav-icon">&#x1F4CA;</span> Summary
+            </button>
+        </nav>
+    </header>
+
+    <div id="stats-bar"></div>
+
+    <div id="map-filters" class="map-filters-bar">
+        <div class="map-search-wrapper">
+            <input type="text" id="map-search" placeholder="&#x1F50D; Search cities, ports..." autocomplete="off">
+            <div id="map-search-results" class="search-dropdown"></div>
+        </div>
+        <select id="map-ship-filter"><option value="all">All Ships</option></select>
+        <select id="map-year-filter"><option value="all">All Years</option></select>
+        <select id="map-trip-filter"><option value="all">All Trips</option></select>
+        <select id="map-type-filter">
+            <option value="all">All Types</option>
+            <option value="Cruise">&#x1F6A2; Cruises</option>
+            <option value="Flight">&#x2708;&#xFE0F; Flights</option>
+        </select>
+        <button id="map-filter-reset" class="map-reset-btn" title="Reset all filters">&#x21BA; Reset</button>
+    </div>
+
+    <div id="filters" class="filters-bar" style="display:none;">
+        <input type="text" id="search-input" placeholder="&#x1F50D; Search trips, cities...">
+        <select id="year-filter"><option value="all">All Years</option></select>
+        <select id="type-filter">
+            <option value="all">All Types</option>
+            <option value="Cruise">&#x1F6A2; Cruises</option>
+            <option value="Flight">&#x2708;&#xFE0F; Flights</option>
+        </select>
+        <select id="source-filter">
+            <option value="all">All Sources</option>
+            <option value="manual">Manual</option>
+        </select>
+    </div>
+
+    <div id="globe-view" class="view active">
+        <div id="globe-container"></div>
+        <div id="map-hud"><div id="hud-stats"></div></div>
+        <div id="globe-legend">
+            <div class="legend-title">Routes</div>
+            <div class="legend-item"><span class="legend-line-sample cruise-line"></span> Cruise</div>
+            <div class="legend-item"><span class="legend-line-sample flight-line"></span> Flight</div>
+            <div class="legend-title" style="margin-top:10px">Markers</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#f472b6;color:#f472b6"></span> Cruise Port</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#c084fc;color:#c084fc"></span> Airport</div>
+        </div>
+    </div>
+
+    <div id="detail-panel" class="detail-panel" style="display:none;">
+        <div class="dp-drag-handle" id="dp-handle">
+            <span class="dp-dots">&#x22EE;&#x22EE;&#x22EE;</span>
+        </div>
+        <button class="dp-close" id="dp-close">&times;</button>
+        <div id="dp-content"></div>
+    </div>
+
+    <div id="table-view" class="view">
+        <div id="table-wrapper"></div>
+    </div>
+
+    <div id="timeline-view" class="view">
+        <div id="timeline-container"></div>
+    </div>
+
+    <div id="countries-view" class="view">
+        <div id="countries-container"></div>
+    </div>
+
+    <div id="gaps-view" class="view" style="display:none;"><div id="gaps-container"></div></div>
+    <div id="summary-view" class="view">
+        <div id="summary-container"></div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
+    <script src="js/geocode.js"></script>
+    <script src="js/globe.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
