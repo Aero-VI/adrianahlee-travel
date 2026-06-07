@@ -1635,3 +1635,15 @@ tr:hover .issues-btn, .trip-header:hover .issues-btn { opacity: 0.8; }
     .hotel-card { grid-column: span 2; }
     .hotel-num { font-size: 1.2rem; }
 }
+
+/* Where Was I */
+.where-was-i { display:flex; align-items:center; gap:8px; }
+.where-was-i input[type="date"] { background:#1a1a2e; border:1px solid #f472b6; color:#e0e0e0; padding:4px 8px; border-radius:6px; font-size:0.85rem; }
+.where-was-i button { background:linear-gradient(135deg,#f472b6,#c084fc); color:#fff; border:none; padding:4px 12px; border-radius:6px; cursor:pointer; font-size:0.85rem; }
+.where-was-i #where-result { color:#f472b6; font-size:0.85rem; }
+
+/* JSON Popup */
+.json-popup-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:9999; display:flex; align-items:center; justify-content:center; }
+.json-popup { background:#1a1a2e; border:1px solid #f472b6; border-radius:12px; padding:24px; max-width:80vw; max-height:80vh; overflow:auto; position:relative; }
+.json-popup-close { position:absolute; top:8px; right:12px; background:none; border:none; color:#f472b6; font-size:1.5rem; cursor:pointer; }
+.json-popup-content { color:#e0e0e0; font-size:0.85rem; white-space:pre-wrap; }

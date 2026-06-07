@@ -62,6 +62,11 @@
             <option value="all">All Sources</option>
             <option value="manual">Manual</option>
         </select>
+        <div class="where-was-i">
+            <input type="date" id="where-date" value="2025-06-15">
+            <button id="where-btn">Where Was I?</button>
+            <span id="where-result"></span>
+        </div>
     </div>
 
     <div id="globe-view" class="view active">
@@ -94,17 +99,18 @@
     </div>
 
     <div id="countries-view" class="view">
-        <div id="countries-container"></div>
+        <div id="countries-container"><div id="countries-grid"></div></div>
     </div>
 
     <div id="gaps-view" class="view" style="display:none;"><div id="gaps-container"></div></div>
     <div id="summary-view" class="view">
-        <div id="summary-container"></div>
+        <div id="summary-container"><div id="summary-content"></div></div>
     </div>
 
     <script src="https://unpkg.com/maplibre-gl@5.0.0/dist/maplibre-gl.js"></script>
     <script src="js/geocode.js"></script>
     <script src="js/globe.js"></script>
     <script src="js/app.js"></script>
+    <div id="json-popup-overlay" class="json-popup-overlay" style="display:none;"><div class="json-popup"><button class="json-popup-close">&times;</button><pre class="json-popup-content"></pre></div></div>
 </body>
 </html>
