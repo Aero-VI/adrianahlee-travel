@@ -5,6 +5,8 @@
 let map = null;
 let mapPopup = null;
 let mapSourcesAdded = false;
+let _countryGeoJsonCache = null;
+let _countryFetchInFlight = false;
 
 const ROUTE_COLORS = {
   Flight: '#c084fc',
@@ -156,12 +158,13 @@ function clearMapLayers() {
     'flight-glow', 'flight-lines', 'cruise-glow', 'cruise-lines',
     'train-glow', 'train-lines', 'bus-glow', 'bus-lines',
     'markers-glow', 'markers-core',
+    'event-markers-glow', 'event-markers-core', 'event-labels',
     'country-fill', 'country-border'
   ];
   layerIds.forEach(function(id) {
     if (map.getLayer(id)) map.removeLayer(id);
   });
-  var sourceIds = ['flights', 'cruises', 'trains', 'buses', 'markers', 'visited-countries'];
+  var sourceIds = ['flights', 'cruises', 'trains', 'buses', 'markers', 'event-markers', 'visited-countries'];
   sourceIds.forEach(function(id) {
     if (map.getSource(id)) map.removeSource(id);
   });
@@ -194,6 +197,7 @@ function buildMapData(trips, events, filterShip, filterType) {
   var trainFeatures = [];
   var busFeatures = [];
   var markerMap = {};
+  var eventMarkerFeatures = [];
   var visitedCountryCodes = new Set();
 
   function addCountry(code) { if (code) visitedCountryCodes.add(code); }
@@ -318,10 +322,8 @@ function buildMapData(trips, events, filterShip, filterType) {
           storeCruiseItinerary(seg.BookingNumber, shipLabel, itinPorts);
         }
 
-        console.log('[CRUISE]', shipLabel, 'ports:', ports.length, ports.map(function(p){return p.name + ' [' + p.coord[0] + ',' + p.coord[1] + ']';}));
         for (var ci = 0; ci < ports.length - 1; ci++) {
           var cruiseArc = createGeoArc(ports[ci].coord, ports[ci + 1].coord, 40);
-          console.log('[CRUISE ARC]', ports[ci].name, '->', ports[ci+1].name, 'points:', cruiseArc.length);
           cruiseFeatures.push({
             type: 'Feature',
             geometry: { type: 'LineString', coordinates: cruiseArc },
@@ -401,15 +403,29 @@ function buildMapData(trips, events, filterShip, filterType) {
     });
   });
 
-  // Events
+  // Events - render as distinct markers with labels
   if (!filterType || filterType === 'all') {
     (events || []).forEach(function(ev) {
       var evCoord = geocode('', '', ev.City||'', '');
       var evDate = ev.StartTime ? new Date(ev.StartTime).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
       if (evCoord) {
+        // Add to regular markers for popup info
         addMarker(evCoord, ev.City||'', 'Event',
-          '\uD83C\uDFAD ' + (ev.EventName || ev.Title || ''), ev.CountryCode, '', evDate);
+          '\uD83C\uDFAB ' + (ev.Title || ''), ev.CountryCode, '', evDate);
         addCountry(ev.CountryCode);
+
+        // Also add to dedicated event markers for distinct rendering
+        eventMarkerFeatures.push({
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [evCoord[1], evCoord[0]] },
+          properties: {
+            label: ev.Title || ev.EventName || 'Event',
+            shortLabel: (ev.Title || '').length > 30 ? (ev.Title || '').substring(0, 27) + '...' : (ev.Title || ''),
+            city: ev.City || '',
+            date: evDate,
+            type: ev.EventType || 'Event'
+          }
+        });
       }
     });
   }
@@ -420,7 +436,7 @@ function buildMapData(trips, events, filterShip, filterType) {
   entries.forEach(function(loc) {
     var color = '#58a6ff';
     var size = 4;
-    if (loc.types.has('Event')) { color = MARKER_COLORS.Event; size = 4; }
+    if (loc.types.has('Event')) { color = MARKER_COLORS.Event; size = 6; }
     if (loc.types.has('Bus')) { color = MARKER_COLORS.Bus; size = 4; }
     if (loc.types.has('Train')) { color = MARKER_COLORS.Train; size = 4; }
     if (loc.types.has('Flight')) { color = MARKER_COLORS.Flight; size = 5; }
@@ -449,7 +465,6 @@ function buildMapData(trips, events, filterShip, filterType) {
     });
   });
 
-  console.log("[MAP SUMMARY] Flights:", flightFeatures.length, "Cruises:", cruiseFeatures.length, "Trains:", trainFeatures.length, "Buses:", busFeatures.length, "Markers:", markerFeatures.length);
   // Add sources and layers
   try {
     map.addSource('flights', {
@@ -471,6 +486,10 @@ function buildMapData(trips, events, filterShip, filterType) {
     map.addSource('markers', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: markerFeatures }
+    });
+    map.addSource('event-markers', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: eventMarkerFeatures }
     });
 
     // Cruise glow + line
@@ -534,11 +553,52 @@ function buildMapData(trips, events, filterShip, filterType) {
         'circle-stroke-opacity': 0.35
       }
     });
+
+    // Event markers - larger, pulsing glow with labels
+    if (eventMarkerFeatures.length > 0) {
+      map.addLayer({
+        id: 'event-markers-glow', type: 'circle', source: 'event-markers',
+        paint: {
+          'circle-radius': 14,
+          'circle-color': MARKER_COLORS.Event,
+          'circle-opacity': 0.2,
+          'circle-blur': 0.6
+        }
+      });
+      map.addLayer({
+        id: 'event-markers-core', type: 'circle', source: 'event-markers',
+        paint: {
+          'circle-radius': 7,
+          'circle-color': MARKER_COLORS.Event,
+          'circle-opacity': 0.9,
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.5,
+          'circle-stroke-opacity': 0.7
+        }
+      });
+      map.addLayer({
+        id: 'event-labels', type: 'symbol', source: 'event-markers',
+        layout: {
+          'text-field': ['get', 'shortLabel'],
+          'text-font': ['Open Sans Regular'],
+          'text-size': 11,
+          'text-offset': [0, 1.8],
+          'text-anchor': 'top',
+          'text-max-width': 15
+        },
+        paint: {
+          'text-color': MARKER_COLORS.Event,
+          'text-halo-color': '#0a0e17',
+          'text-halo-width': 1.5,
+          'text-opacity': 0.9
+        }
+      });
+    }
   } catch (e) {
     console.error('Error adding map layers:', e);
   }
 
-  // Country highlights (async, non-blocking)
+  // Country highlights (async, with caching)
   loadCountryHighlights(visitedCountryCodes);
 
   // Interactive popups
@@ -559,18 +619,30 @@ function buildMapData(trips, events, filterShip, filterType) {
 }
 
 function loadCountryHighlights(visitedCodes) {
-  console.log('[Country Highlights] Called with', visitedCodes.size, 'codes:', Array.from(visitedCodes));
-  if (!map || visitedCodes.size === 0) {
-    console.warn('[Country Highlights] Skipped: map=' + !!map + ', codes=' + visitedCodes.size);
-    return;
-  }
+  if (!map || visitedCodes.size === 0) return;
 
   var iso3Set = new Set();
   visitedCodes.forEach(function(code) {
     var iso3 = ISO2_TO_ISO3[code];
     if (iso3) iso3Set.add(iso3);
   });
-  console.log('[Country Highlights] ISO3 set:', Array.from(iso3Set));
+
+  if (iso3Set.size === 0) return;
+
+  // Use cached data if available
+  if (_countryGeoJsonCache) {
+    applyCountryHighlights(_countryGeoJsonCache, iso3Set);
+    return;
+  }
+
+  // Prevent duplicate fetches
+  if (_countryFetchInFlight) {
+    // Wait for the in-flight fetch to complete, then retry
+    setTimeout(function() { loadCountryHighlights(visitedCodes); }, 500);
+    return;
+  }
+
+  _countryFetchInFlight = true;
 
   fetch('https://d2ad6b4ur7yvpq.cloudfront.net/naturalearth-3.3.0/ne_110m_admin_0_countries.geojson')
     .then(function(r) {
@@ -578,43 +650,56 @@ function loadCountryHighlights(visitedCodes) {
       return r.json();
     })
     .then(function(data) {
-      var features = data.features || [];
-      console.log('[Country Highlights] NE features loaded:', features.length);
-      var visited = features.filter(function(f) {
-        var props = f.properties || {};
-        var iso3 = props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '';
-        return iso3Set.has(iso3);
-      });
-
-      console.log('[Country Highlights] Matched features:', visited.length);
-      if (visited.length === 0) { console.warn('[Country Highlights] No matching features'); return; }
-      if (!map) { console.warn('[Country Highlights] Map gone after fetch'); return; }
-      if (!map.isStyleLoaded()) { console.warn('[Country Highlights] Style not loaded yet'); return; }
-      if (map.getSource('visited-countries')) { console.warn('[Country Highlights] Source already exists, skipping'); return; }
-
-      map.addSource('visited-countries', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: visited }
-      });
-
-      var beforeLayer = map.getLayer('cruise-glow') ? 'cruise-glow' : undefined;
-      map.addLayer({
-        id: 'country-fill', type: 'fill', source: 'visited-countries',
-        paint: { 'fill-color': '#f472b6', 'fill-opacity': 0.12 }
-      }, beforeLayer);
-      map.addLayer({
-        id: 'country-border', type: 'line', source: 'visited-countries',
-        paint: { 'line-color': '#f472b6', 'line-width': 1.2, 'line-opacity': 0.4 }
-      }, beforeLayer);
-      console.log('[Country Highlights] SUCCESS - added layers for', visited.length, 'countries');
+      _countryGeoJsonCache = data;
+      _countryFetchInFlight = false;
+      applyCountryHighlights(data, iso3Set);
     })
-    .catch(function(err) { console.warn('[Country Highlights] FAILED:', err); });
+    .catch(function(err) {
+      console.warn('[Country Highlights] FAILED:', err);
+      _countryFetchInFlight = false;
+    });
+}
+
+function applyCountryHighlights(data, iso3Set) {
+  if (!map || !map.isStyleLoaded()) return;
+
+  // Remove existing country layers/source if they exist (prevents duplicates)
+  if (map.getLayer('country-border')) map.removeLayer('country-border');
+  if (map.getLayer('country-fill')) map.removeLayer('country-fill');
+  if (map.getSource('visited-countries')) map.removeSource('visited-countries');
+
+  var features = data.features || [];
+  var visited = features.filter(function(f) {
+    var props = f.properties || {};
+    var iso3 = props.iso_a3 || props.ISO_A3 || props.adm0_a3 || '';
+    return iso3Set.has(iso3);
+  });
+
+  if (visited.length === 0) return;
+
+  map.addSource('visited-countries', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: visited }
+  });
+
+  var beforeLayer = map.getLayer('cruise-glow') ? 'cruise-glow' : undefined;
+  map.addLayer({
+    id: 'country-fill', type: 'fill', source: 'visited-countries',
+    paint: { 'fill-color': '#f472b6', 'fill-opacity': 0.12 }
+  }, beforeLayer);
+  map.addLayer({
+    id: 'country-border', type: 'line', source: 'visited-countries',
+    paint: { 'line-color': '#f472b6', 'line-width': 1.2, 'line-opacity': 0.4 }
+  }, beforeLayer);
 }
 
 function setupInteractions() {
   if (!map) return;
 
-  ['flight-lines', 'cruise-lines', 'train-lines', 'bus-lines', 'markers-core'].forEach(function(layerId) {
+  var interactiveLayers = ['flight-lines', 'cruise-lines', 'train-lines', 'bus-lines', 'markers-core'];
+  if (map.getLayer('event-markers-core')) interactiveLayers.push('event-markers-core');
+
+  interactiveLayers.forEach(function(layerId) {
     map.on('mouseenter', layerId, function() { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', layerId, function() { map.getCanvas().style.cursor = ''; });
   });
@@ -646,6 +731,20 @@ function setupInteractions() {
     var p = f.properties;
     showDetailPanel('Bus', p);
   });
+
+  // Event marker click -> popup with event details
+  if (map.getLayer('event-markers-core')) {
+    map.on('click', 'event-markers-core', function(e) {
+      var f = e.features[0];
+      var p = f.properties;
+      var html = '<div class="map-popup">';
+      html += '<div class="mp-title">\uD83C\uDFAB ' + (p.label || 'Event') + '</div>';
+      if (p.city) html += '<div class="mp-sub">' + p.city + '</div>';
+      if (p.date) html += '<div class="mp-extra">' + p.date + '</div>';
+      html += '</div>';
+      mapPopup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+    });
+  }
 
   // Marker popup (keep as popup for quick info)
   map.on('click', 'markers-core', function(e) {

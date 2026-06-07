@@ -21,7 +21,10 @@ const GEOCODE = {
     'Forli Station':[44.1914,12.0493],
     'Forli':[44.1914,12.0493]
   },
-  events: {},
+  events: {
+    'Imola':[44.3535,11.7141],
+    'Bologna':[44.4949,11.3426]
+  },
   cities: {
     'New Orleans':[29.9511,-90.0715],
     'Nassau':[25.048,-77.3554],
