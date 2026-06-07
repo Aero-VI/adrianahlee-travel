@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "EventId": "EVT-F1-IMOLA-01",
+    "TripId": "f1-emilia-romagna-2025",
+    "EventType": "Event",
+    "Title": "Formula 1 Emilia Romagna Grand Prix 2025",
+    "City": "Imola",
+    "CountryCode": "IT",
+    "StartTime": "2025-05-18T14:00:00+02:00",
+    "EndTime": "2025-05-18T16:00:00+02:00",
+    "IsFullDay": false,
+    "Notes": "F1 race at Autodromo Enzo e Dino Ferrari, Imola. Round 7 of the 2025 FIA Formula One World Championship.",
+    "Source": "manual"
+  }
+]
